@@ -1,20 +1,20 @@
 {
   "project_info": {
-    "project_number": "932083352411",
-    "project_id": "tripledger-9835b",
-    "storage_bucket": "tripledger-9835b.firebasestorage.app"
+    "project_number": "983359654145",
+    "project_id": "tripledger-tripexpensetracker",
+    "storage_bucket": "tripledger-tripexpensetracker.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:932083352411:android:0bda26f494655cf5b3d07e",
+        "mobilesdk_app_id": "1:983359654145:android:5c454f5d891dce868c7300",
         "android_client_info": {
           "package_name": "com.tripledger"
         }
       },
       "oauth_client": [
         {
-          "client_id": "932083352411-284h9cciarlren25kl322t8lhtv4rgbm.apps.googleusercontent.com",
+          "client_id": "983359654145-477880jnekouiiiqdll89hjl983c0hpa.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.tripledger",
@@ -22,20 +22,20 @@
           }
         },
         {
-          "client_id": "932083352411-sjth69a4u9d2qg6odgoe8shfk9mdemi8.apps.googleusercontent.com",
+          "client_id": "983359654145-ahd6ri7v9q9tm9mfq2gqc0rhp10p2oft.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAn5T8DQxfihhg__DuFFLRK7A4qLI85zpU"
+          "current_key": "AIzaSyBJ3GIR0QpAE-2N8WVS46qmcHVGW1AjUtQ"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "932083352411-sjth69a4u9d2qg6odgoe8shfk9mdemi8.apps.googleusercontent.com",
+              "client_id": "983359654145-ahd6ri7v9q9tm9mfq2gqc0rhp10p2oft.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

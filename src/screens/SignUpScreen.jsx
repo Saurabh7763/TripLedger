@@ -1,21 +1,19 @@
-import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import tailwind from 'twrnc'
-import { colors } from '../theme'
-import BackButton from '../components/BackButton'
-import { useNavigation } from '@react-navigation/native'
+import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import tailwind from 'twrnc';
+import { colors } from '../theme';
+import BackButton from '../components/BackButton';
 import Snackbar from 'react-native-snackbar';
-import { createUser } from '../firebase/Firebaseervices'
-import { useDispatch, useSelector } from 'react-redux'
-import { setUserLoading } from '../redux/slice/userSlice'
-import Loading from '../components/Loading'
+import { createUser } from '../firebase/firebaseServices';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUserLoading } from '../redux/slice/userSlice';
+import Loading from '../components/Loading';
 
 const SignUpScreen = () => {
-  
-  const[email,setEmail] = useState('')
-  const[password,setPassword] = useState('')
- const { userLoading } = useSelector(state => state.user);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { userLoading } = useSelector(state => state.user);
   const dispatch = useDispatch();
 
   const handleSubmit = async () => {
@@ -28,76 +26,81 @@ const SignUpScreen = () => {
     }
 
     try {
-      dispatch(setUserLoading(true));
-      await createUser(email, password);
+      await createUser(email.trim(), password);
     } catch (e) {
       Snackbar.show({
         text: e.message,
         backgroundColor: 'red',
       });
-    } finally {
-      dispatch(setUserLoading(false));
     }
   };
 
   return (
     <SafeAreaView>
-        <View style={tailwind`flex justify-between h-full mx-4`}>
-           <View>
-             <View style={tailwind`relative `}>
-                <View style={tailwind`absolute top-0 left-0 z-10`}>
-                   <BackButton/>
-                </View>
-                <Text style={tailwind`text-xl font-bold text-center ${colors.heading}`}>Sign Up</Text>
+      <View style={tailwind`flex justify-between h-full mx-4`}>
+        <View>
+          <View style={tailwind`relative`}>
+            <View style={tailwind`absolute top-0 left-0 z-10`}>
+              <BackButton />
             </View>
-            <View style={tailwind`flex-row justify-center my-3`}>
-              <Image source={require('../assets/images/signup.png')} 
-                style={tailwind`h-80 w-80`}
-              />
-            </View>
-            <View style={tailwind`mx-2 gap-1`}>
-              <Text style={tailwind`${colors.heading} font-bold text-lg`}>
-                Email
-              </Text>
-              <TextInput
-                style={tailwind`bg-white rounded-3 p-4 mb-3`}
-                value={email}
-                onChangeText={setEmail}
-                
-              />
-              <Text style={tailwind`${colors.heading} font-bold text-lg `}>
-                Password
-              </Text>
-              <TextInput
-                style={tailwind`bg-white rounded-3 p-4 mb-3 ${colors.heading} `}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                underlineColorAndroid="transparent"
-              />
-            </View>
-           </View>
+            <Text
+              style={tailwind`text-xl font-bold text-center ${colors.heading}`}
+            >
+              Sign Up
+            </Text>
+          </View>
 
-           <View>
-           {
-            userLoading? (
-              <Loading/>
-            ):(
-              <TouchableOpacity 
+          <View style={tailwind`flex-row justify-center my-3`}>
+            <Image
+              source={require('../assets/images/signup.png')}
+              style={tailwind`h-80 w-80`}
+            />
+          </View>
+
+          <View style={tailwind`mx-2 gap-1`}>
+            <Text style={tailwind`${colors.heading} font-bold text-lg`}>
+              Email
+            </Text>
+            <TextInput
+              style={tailwind`bg-white rounded-5 p-4 mb-3`}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+
+            <Text style={tailwind`${colors.heading} font-bold text-lg`}>
+              Password
+            </Text>
+            <TextInput
+              style={tailwind`bg-white rounded-5 p-4 mb-3 ${colors.heading}`}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+          </View>
+        </View>
+
+        <View>
+          {userLoading ? (
+            <Loading />
+          ) : (
+            <TouchableOpacity
               onPress={handleSubmit}
-              style={[tailwind`p-3 m-2 mb-2 rounded-full`,{backgroundColor:colors.button}]}
+              style={[
+                tailwind`p-3 m-2 mb-2 rounded-full`,
+                { backgroundColor: colors.button },
+              ]}
             >
               <Text style={tailwind`text-center text-lg font-bold text-white`}>
                 Sign Up
               </Text>
             </TouchableOpacity>
-            )
-           }
-            
-           </View>
+          )}
         </View>
+      </View>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default SignUpScreen
+export default SignUpScreen;

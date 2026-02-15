@@ -1,20 +1,29 @@
-import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from './firebaseConfig'
-import { setUser, setUserLoading } from '../redux/slice/userSlice'
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+import { setUser, setUserLoading } from '../redux/slice/userSlice';
 
 export const listenToAuthChanges = (dispatch) => {
-  onAuthStateChanged(auth, (user) => {
+  const auth = getAuth();
+
+  const unsubscribe = onAuthStateChanged(auth, user => {
+
+    console.log("AUTH STATE:", user?.email);
+
     if (user) {
       dispatch(
         setUser({
           uid: user.uid,
-          email: user.email
+          email: user.email,
+          name: user.displayName || '',
+          photo: user.photoURL || ''
         })
-      )
+      );
     } else {
-      dispatch(setUser(null))
+      dispatch(setUser(null));
     }
 
-    dispatch(setUserLoading(false))
-  })
-}
+    
+    dispatch(setUserLoading(false));
+  });
+
+  return unsubscribe;
+};

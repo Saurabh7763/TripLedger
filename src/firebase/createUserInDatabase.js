@@ -1,13 +1,12 @@
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../firebaseConfig';
+import firestore from '@react-native-firebase/firestore';
 
-export const createUserInDatabase = async (user) => {
-  await setDoc(doc(db, 'users', user.uid), {
+export const createUserInDatabase = async user => {
+  await firestore().collection('users').doc(user.uid).set({
     uid: user.uid,
     name: user.displayName,
     email: user.email,
     photo: user.photoURL,
-    createdAt: new Date(),
-    provider: 'google'
+    createdAt: firestore.FieldValue.serverTimestamp(),
+    provider: 'google',
   });
 };

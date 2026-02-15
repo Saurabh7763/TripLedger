@@ -2,32 +2,36 @@ import React, { useEffect } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { useDispatch, useSelector } from 'react-redux'
-import auth from '@react-native-firebase/auth';
-import { setUser } from '../redux/slice/userSlice.js'
+import { listenToAuthChanges } from '../firebase/AuthListner'
+import ProfileScreen from '../screens/ProfileScreen.jsx'
 import HomeScreen from '../screens/HomeScreen'
 import AddTripScreen from '../screens/AddTripScreen'
 import AddExpenseScreen from '../screens/AddExpenseScreen'
-import TripExpenseScreen from '../screens/TripExpenseScreen.jsx'
-import WelcomeScreen from '../screens/WelcomeScreen.jsx'
-import SignInScreen from '../screens/SignInScreen.jsx'
-import SignUpScreen from '../screens/SignUpScreen.jsx'
+import TripExpenseScreen from '../screens/TripExpenseScreen'
+import WelcomeScreen from '../screens/WelcomeScreen'
+import SignInScreen from '../screens/SignInScreen'
+import SignUpScreen from '../screens/SignUpScreen'
+import Loading from '../components/Loading'
+import NotificationScreen from '../screens/NotificationScreen.jsx'
+import AllTripScreen from '../screens/AllTripScreen.jsx'
+
 
 const Stack = createNativeStackNavigator()
 
 const AppNavigator = () => {
 
-  const { user } = useSelector(state => state.user)
+  const { user, userLoading } = useSelector(state => state.user)
   const dispatch = useDispatch()
 
-  
   useEffect(() => {
-  const unsubscribe = auth().onAuthStateChanged(user => {
-    console.log("AUTH CHANGED:", user);
-    dispatch(setUser(user));
-  });
+    const unsubscribe = listenToAuthChanges(dispatch)
+    return unsubscribe
+  }, [])
 
-  return unsubscribe;
-}, []);
+  
+  if (userLoading) {
+    return <Loading />
+  }
 
   return (
     <NavigationContainer>
@@ -37,6 +41,9 @@ const AppNavigator = () => {
           <Stack.Screen name="AddTrip" component={AddTripScreen} />
           <Stack.Screen name="AddExpense" component={AddExpenseScreen} />
           <Stack.Screen name="TripExpense" component={TripExpenseScreen} />
+          <Stack.Screen name='Profile' component={ProfileScreen}/>
+          <Stack.Screen name='Notification' component={NotificationScreen}/>
+          <Stack.Screen name='Trips' component={AllTripScreen}/>
         </Stack.Navigator>
       ) : (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
