@@ -85,7 +85,7 @@ src/
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/tripledger.git
+https://github.com/Saurabh7763/TripLedger.git
 cd tripledger
 ```
 
