@@ -5,14 +5,19 @@ import { store } from './src/redux/store/store';
 import './src/firebase/GoogleConfig';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './src/components/AppToast';
+import { NavigationContainer } from '@react-navigation/native';
 
 const App = () => {
   return (
-    <Provider store={store}>
-      
-      <AppNavigator /> 
-      <Toast config={toastConfig} />
-    </Provider>
+    
+      <Provider store={store}>
+        <NavigationContainer>
+          <AppNavigator />
+        </NavigationContainer>
+        <Toast config={toastConfig} />
+
+      </Provider>
+
   );
 };
 

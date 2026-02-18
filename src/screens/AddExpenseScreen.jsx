@@ -1,4 +1,13 @@
-import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
@@ -6,21 +15,28 @@ import { colors } from '../theme';
 import BackButton from '../components/BackButton';
 import { useNavigation } from '@react-navigation/native';
 import Snackbar from 'react-native-snackbar';
-import firestore from '@react-native-firebase/firestore';
+import { getApp } from '@react-native-firebase/app';
+import { getFirestore, collection, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
 import Loading from '../components/Loading';
 import { categories } from '../constants';
 import { showSuccess } from '../utils/showToast';
 
+const db = getFirestore(getApp());
+
+
 const AddExpenseScreen = props => {
   const { id } = props.route.params;
+
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
+  const [paidby, setPaidby] = useState('');
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
+
   const navigation = useNavigation();
 
   const handleAddExpense = async () => {
-    if (!title || !amount || !category) {
+    if (!title || !amount || !paidby || !category) {
       Snackbar.show({
         text: 'Please fill all the fields',
         backgroundColor: 'red',
@@ -28,107 +44,198 @@ const AddExpenseScreen = props => {
       return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
+      const expRefs = collection(db, 'expenses')
 
-    await firestore()
-      .collection('expenses')
-      .add({
+      await addDoc(expRefs,{
         title,
-        amount: Number(amount),
-        category,
-        tripId: id,
-        createdAt: firestore.FieldValue.serverTimestamp(),
-      });
+          amount: Number(amount),
+          paidby,
+          category,
+          tripId: id,
+          createdAt:serverTimestamp(),
+      })
 
-    setLoading(false);
-    showSuccess('Expense Added 💰');
-    navigation.goBack();
+      showSuccess('Expense Added 💰');
+      navigation.goBack();
+    } catch (error) {
+      Snackbar.show({
+        text: 'Something went wrong',
+        backgroundColor: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <SafeAreaView>
-      <View style={tailwind`flex justify-between h-full mx-4`}>
-        
-        <View>
-          <View style={tailwind`relative`}>
-            <View style={tailwind`absolute top-0 left-0 z-10`}>
-              
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 30 }}
+        >
+         
+          <View style={tailwind`px-4 pt-2`}>
+            <View style={tailwind`flex-row items-center justify-between`}>
               <BackButton />
+              <Text style={tailwind`text-xl font-bold ${colors.heading}`}>
+                Add Expense
+              </Text>
+              <View style={{ width: 40 }} />
             </View>
-            <Text
-              style={tailwind`text-xl font-bold text-center ${colors.heading}`}
-            >
-              Add Expense
-            </Text>
           </View>
 
-          <View style={tailwind`flex-row justify-center my-3`}>
+          
+          <View
+            style={[tailwind`bg-green-400`,{
+              marginHorizontal: 20,
+              marginTop: 15,
+              borderRadius: 26,
+              padding: 15,
+              alignItems: 'center',
+              elevation: 10,
+            }]}
+          >
             <Image
               source={require('../assets/images/expenseBanner.png')}
-              style={tailwind`h-72 w-72`}
+              style={{ height: 170, width: 170, marginBottom: 10 }}
+              resizeMode="contain"
             />
+
+            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
+              Record your spending 💸
+            </Text>
+
+            <Text
+              style={{
+                color: '#DCFCE7',
+                textAlign: 'center',
+                marginTop: 6,
+                paddingHorizontal: 10,
+              }}
+            >
+              Keep track of every rupee you spend on this trip.
+            </Text>
           </View>
 
-          <View style={tailwind`mx-2 gap-1`}>
-            <Text style={tailwind`${colors.heading} font-bold text-lg`}>
-              For what?
+          
+          <View style={tailwind`px-5 mt-6`}>
+          
+            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
+              Expense Title
             </Text>
-            <TextInput
-              style={tailwind`bg-white rounded-xl p-4 mb-3`}
-              value={title}
-              onChangeText={setTitle}
-            />
+            <View style={tailwind`bg-white rounded-2xl px-4 py-2 mb-4 shadow`}>
+              <TextInput
+                placeholder="e.g. Hotel, Food, Taxi"
+                placeholderTextColor="#94A3B8"
+                style={{ fontSize: 16 }}
+                value={title}
+                onChangeText={setTitle}
+              />
+            </View>
 
-            <Text style={tailwind`${colors.heading} font-bold text-lg`}>
-              How much?
+           
+            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
+              Amount
             </Text>
-            <TextInput
-              style={tailwind`bg-white rounded-xl p-4 mb-3`}
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-            />
-          </View>
+            <View
+              style={tailwind`bg-white rounded-2xl px-4 py-3 mb-4 flex-row items-center shadow`}
+            >
+              <Text
+                style={{ fontSize: 18, fontWeight: 'bold', marginRight: 6 }}
+              >
+                ₹
+              </Text>
+              <TextInput
+                placeholder="0"
+                placeholderTextColor="#94A3B8"
+                style={{ fontSize: 18, flex: 1 }}
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="numeric"
+              />
+            </View>
 
-          <View style={tailwind`mx-2`}>
-            <Text style={tailwind`${colors.heading} font-bold text-lg`}>
+            
+            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
+              Who Paid?
+            </Text>
+            <View style={tailwind`bg-white rounded-2xl px-4 py-3 mb-4 shadow`}>
+              <TextInput
+                placeholder="e.g. Saurabh"
+                placeholderTextColor="#94A3B8"
+                style={{ fontSize: 18 }}
+                value={paidby}
+                onChangeText={setPaidby}
+              />
+            </View>
+
+            
+            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
               Category
             </Text>
-
-            <View style={tailwind`flex-wrap flex-row items-center`}>
+            <View style={tailwind`flex-row flex-wrap`}>
               {categories.map(cat => {
-                const bg = cat.value === category ? 'bg-green-200' : 'bg-white';
+                const selected = cat.value === category;
                 return (
                   <TouchableOpacity
                     key={cat.value}
-                    style={tailwind`${bg} rounded-full px-3 p-2 mb-2 mr-3`}
                     onPress={() => setCategory(cat.value)}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderRadius: 20,
+                      marginRight: 10,
+                      marginBottom: 10,
+                      backgroundColor: selected ? colors.button : '#ffffff',
+                      borderWidth: 1,
+                      borderColor: selected ? colors.button : '#E2E8F0',
+                    }}
                   >
-                    <Text>{cat.title}</Text>
+                    <Text
+                      style={{
+                        color: selected ? '#fff' : '#334155',
+                        fontWeight: '600',
+                      }}
+                    >
+                      {cat.title}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
           </View>
-        </View>
-        <View>
-          {loading ? (
-            <Loading />
-          ) : (
-            <TouchableOpacity
-              onPress={handleAddExpense}
-              style={[
-                tailwind`p-3 m-2 mb-2 rounded-full`,
-                { backgroundColor: colors.button },
-              ]}
-            >
-              <Text style={tailwind`text-center text-lg font-bold text-white`}>
-                Add Expense
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+
+          
+          <View style={tailwind`px-5 mt-6`}>
+            {loading ? (
+              <Loading />
+            ) : (
+              <TouchableOpacity
+                onPress={handleAddExpense}
+                style={{
+                  backgroundColor: colors.button,
+                  paddingVertical: 18,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  elevation: 6,
+                }}
+              >
+                <Text
+                  style={{ color: 'white', fontSize: 17, fontWeight: 'bold' }}
+                >
+                  Save Expense
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

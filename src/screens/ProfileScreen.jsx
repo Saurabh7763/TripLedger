@@ -1,95 +1,156 @@
-import { View, Text, Image, TouchableOpacity, Pressable } from 'react-native';
-import React from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
 import { colors } from '../theme';
 import BackButton from '../components/BackButton';
-import { useNavigation } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { getAuth, signOut } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { showSuccess } from '../utils/showToast';
-import ProfileFeatures from '../components/ProfileFeatures';
 import { useSelector } from 'react-redux';
+import { getApp } from '@react-native-firebase/app';
+import { getFirestore, collection, query, where, getDocs } from '@react-native-firebase/firestore';
 
+const db = getFirestore(getApp())
+const auth = getAuth(getApp())
 const ProfileScreen = () => {
   const navigation = useNavigation();
+  const [tripsCount, setTripCount] = useState(0)
+  const isFocused = useIsFocused();
+
   const { user } = useSelector(state => state.user);
- 
+
+  const fetchTripCount = async () => {
+  try {
+    const tripsRef = collection(db, 'trips')
+    const q = query(tripsRef, where("userId", "==", user.uid))
+    const snapshot = await getDocs(q);
+   setTripCount(snapshot.size);
+
+  } catch (error) {
+    console.log('Trip Count Error:', error);
+  }
+};
+
+
+  useEffect(() => {
+  if (isFocused && user) {
+    fetchTripCount();
+  }
+}, [isFocused, user]);
+
 
   const handleLogout = async () => {
-    await auth().signOut();
+    await signOut(auth)
     await GoogleSignin.signOut();
     showSuccess('Logged Out Successfully');
   };
+
   return (
-    <SafeAreaView>
-      <View style={tailwind`flex `}>
-        <View style={tailwind`flex px-5 mb-5 `}>
-          <View style={tailwind`flex-row justify-between items-center`}>
-            <BackButton />
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Notification')}
-            >
-              <Image
-                source={require('../assets/images/notification.png')}
-                style={tailwind`h-10 w-10 `}
-              />
-            </TouchableOpacity>
-          </View>
-          <View
-            style={tailwind`flex justify-center  items-center bg-green-200 py-3 mt-8 rounded-5`}
-          >
+    <SafeAreaView style={tailwind`flex-1 bg-gray-100`}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+
+       
+        <View style={tailwind`flex-row justify-between items-center px-5 pt-3`}>
+          <BackButton />
+          <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
             <Image
-              source={require('../assets/images/user.png')}
-              style={tailwind`h-20 w-20 bg-white rounded-full p-5 mb-2`}
+              source={require('../assets/images/notification.png')}
+              style={tailwind`h-9 w-9`}
             />
-            <Text
-              style={[tailwind`text-xl font-bold`, { color: colors.heading }]}
-            >
-              Hii👋, Admin
-            </Text>
-            <Text style={tailwind`${colors.heading}`}>{user?.email}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
-        <View style={tailwind`flex-row justify-center  items-center`}>
+        
+        <View style={tailwind`mt-5 mx-4 bg-white p-5 rounded-3xl shadow-md items-center`}>
+          
+          <View style={[tailwind`p-1 rounded-full`,{backgroundColor:colors.button}]}>
+            <Image
+              source={require('../assets/images/user.png')}
+              style={tailwind`h-24 w-24 bg-white rounded-full p-4`}
+            />
+          </View>
+
+          <Text style={[tailwind`text-2xl font-bold mt-3`, { color: colors.heading }]}>
+            Hi 👋, {user?.email?.split('@')[0]}
+          </Text>
+
+          <Text style={tailwind`text-gray-500 mt-1`}>
+            {user?.email}
+          </Text>
+        </View>
+
+       
+        <View style={tailwind`flex-row justify-between mx-4 mt-6`}>
+          
+          <View style={tailwind`flex-1 bg-indigo-100 mr-2 p-4 rounded-2xl items-center`}>
+            <Text style={[tailwind`text-2xl font-bold`, { color: colors.heading }]}>{tripsCount}</Text>
+            <Text style={tailwind`text-gray-500`}>Trips</Text>
+          </View>
+
+
+        </View>
+
+      
+        <View style={tailwind`mt-5 mx-4`}>
+
+         
           <TouchableOpacity
-            style={[
-              tailwind` w-[90%] py-3 rounded-5 flex-row items-center justify-center`,
-              { backgroundColor: colors.button },
-            ]}
+            style={tailwind`flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm`}
             onPress={() => navigation.navigate('Trips')}
           >
             <Image
               source={require('../assets/images/trips.png')}
-              style={tailwind`w-10 h-10 mr-2`}
+              style={tailwind`h-10 w-10 mr-4`}
             />
-            <Text style={tailwind`font-bold text-white text-xl`}>
+            <Text style={[tailwind`text-lg font-semibold`, { color: colors.heading }]}>
               Your Trips
+            </Text>
+          </TouchableOpacity>
+
+       
+          <TouchableOpacity
+            style={tailwind`flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm`}
+            onPress={() => navigation.navigate('Notification')}
+          >
+            <Image
+              source={require('../assets/icons/NotiSetting.png')}
+              style={tailwind`h-9 w-9 mr-4`}
+            />
+            <Text style={[tailwind`text-lg font-semibold`, { color: colors.heading }]}>
+              Notification Settings
+            </Text>
+          </TouchableOpacity>
+
+         
+          <TouchableOpacity
+            style={tailwind`flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm`}
+          >
+            <Image
+              source={require('../assets/icons/support.png')}
+              style={tailwind`h-9 w-9 mr-4`}
+            />
+            <Text style={[tailwind`text-lg font-semibold`, { color: colors.heading }]}>
+              Support
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+
+     
+        <View style={tailwind`mt-5 mx-4 mb-10`}>
+          <TouchableOpacity
+            style={tailwind`bg-red-500 p-4 rounded-2xl items-center`}
+            onPress={handleLogout}
+          >
+            <Text style={tailwind`text-white text-lg font-bold`}>
+              Logout
             </Text>
           </TouchableOpacity>
         </View>
 
-        <View style={tailwind`flex items-center mt-10`}>
-          <ProfileFeatures
-            title="Notification Settings"
-            link={require('../assets/icons/NotiSetting.png')}
-          />
-          <ProfileFeatures
-            title="Support"
-            link={require('../assets/icons/support.png')}
-          />
-        </View>
-
-        <View style={tailwind`flex-row items-center justify-center mt-10`}>
-          <TouchableOpacity
-            style={tailwind`bg-red-500 px-8 py-4 rounded-xl`}
-            onPress={handleLogout}
-          >
-            <Text style={tailwind`font-bold text-white text-xl`}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

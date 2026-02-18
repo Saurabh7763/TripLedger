@@ -2,8 +2,8 @@ import React from 'react'
 import { TouchableOpacity, View } from 'react-native'
 import { ChevronLeftIcon } from 'react-native-heroicons/solid'
 import tailwind from 'twrnc'
-import { colors } from '../theme'
 import { useNavigation } from '@react-navigation/native'
+import { colors } from '../theme'
 
 const BackButton = () => {
   const navigation = useNavigation()

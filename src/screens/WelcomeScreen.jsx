@@ -1,14 +1,52 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
 import { colors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
 import { googleSignup } from '../firebase/googleSignup';
 import { showSuccess, showError } from '../utils/showToast';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
+  const Image1TranslateY = useSharedValue(30);
+  const Image2TranslateY = useSharedValue(30);
+  const Image1Opacity = useSharedValue(0);
+  const Image2Opacity = useSharedValue(0);
+
+  useEffect(() => {
+    Image1TranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
+    Image1Opacity.value = withTiming(1, {
+      duration: 800,
+      easing: Easing.out(Easing.exp),
+    });
+
+    setTimeout(() => {
+      Image2TranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
+      Image2Opacity.value = withTiming(1, {
+        duration: 800,
+        easing: Easing.out(Easing.exp),
+      });
+    }, 200);
+  }, []);
+
+  const Image1animatedstyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: Image1TranslateY.value }],
+    opacity: Image1Opacity.value,
+  }));
+
+    const Image2animatedstyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: Image2TranslateY.value }],
+    opacity: Image2Opacity.value,
+  }));
+
 
   const handleGoogleSignup = async () => {
     try {
@@ -22,19 +60,18 @@ const WelcomeScreen = () => {
   return (
     <SafeAreaView>
       <View style={tailwind`flex h-full justify-evenly`}>
-        <View style={tailwind`flex-row justify-center mt-10`}>
+        <Animated.View style={[tailwind`flex-row justify-center `,Image1animatedstyle]}>
           <Image
             source={require('../assets/images/welcomelogo.png')}
             style={tailwind`w-96 h-96`}
           />
-        </View>
+        </Animated.View>
 
         <View style={tailwind`mx-5`}>
-          <Text
-            style={tailwind`text-center text-4xl mb-10 font-bold ${colors.heading}`}
-          >
-            TripLedger
-          </Text>
+          <Animated.Image 
+            source={require('../assets/images/my-TripLedger.png')}
+           style={[tailwind`mx-auto h-10 mb-10`,Image2animatedstyle]}
+          />
 
           <TouchableOpacity
             style={[

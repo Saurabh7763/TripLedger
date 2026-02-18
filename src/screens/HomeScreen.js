@@ -7,26 +7,61 @@ import randomImage from '../assets/images/randomImage';
 import EmptyList from '../components/EmptyList';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
-import firestore from '@react-native-firebase/firestore';
+import { getApp } from '@react-native-firebase/app';
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+} from '@react-native-firebase/firestore';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
+const db = getFirestore(getApp());
+const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useSelector(state => state.user);
   const [trips, setTrips] = useState([]);
   const isFocused = useIsFocused();
+  const listTranslateY = useSharedValue(30);
+  const listOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    listTranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
+    listOpacity.value = withTiming(1, {
+      duration: 800,
+      easing: Easing.out(Easing.exp),
+    });
+  }, []);
+  const ListAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: listTranslateY.value }],
+    opacity: listOpacity.value,
+  }));
 
   const fetchTrips = async () => {
-    const snapshot = await firestore()
-      .collection('trips')
-      .where('userId', '==', user.uid)
-      .get();
+    try {
+      const tripsRef = collection(db, 'trips');
+      const q = query(tripsRef, where('userId', '==', user.uid));
 
-    let data = [];
-    snapshot.forEach(doc => {
-      data.push({ id: doc.id, ...doc.data() });
-    });
-    setTrips(data);
+      const snapshot = await getDocs(q);
+
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setTrips(data);
+    } catch (error) {
+      console.log('Fetch trips error:', error);
+    }
   };
 
   useEffect(() => {
@@ -35,86 +70,168 @@ const HomeScreen = () => {
     }
   }, [isFocused, user]);
 
-  
-
   return (
-    <SafeAreaView style={tailwind`flex-1`}>
-      <View>
-        <View style={tailwind`flex-row justify-between items-center p-3`}>
-        <View style={tailwind`flex-row items-center`}>
-        <TouchableOpacity
-          style={tailwind`border rounded-full p-2 mr-5`}
-          onPress={()=>navigation.navigate('Profile')}
-        >
-          <Image 
-            source={require('../assets/images/user.png')}
-              style={tailwind`w-7 h-7`}
-            />
-        </TouchableOpacity>
-        <Text style={tailwind`text-3xl font-bold ${colors.heading}`}>
+    <SafeAreaView style={[tailwind`flex-1`, { backgroundColor: '#F1F5F9' }]}>
+      <View
+        style={tailwind`px-4 pt-2 mb-3 flex-row justify-between items-center`}
+      >
+        <View>
+          <Text style={tailwind`text-slate-500 text-sm`}>Welcome back 👋</Text>
+
+          <Text style={tailwind`text-3xl font-extrabold ${colors.heading}`}>
             TripLedger
           </Text>
         </View>
-          
-          
-        </View>
-        <View
-          style={tailwind`items-center justify-center bg-green-200 mx-4 mb-4 rounded-5`}
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Profile')}
+          style={{
+            backgroundColor: '#ffffff',
+            padding: 10,
+            borderRadius: 50,
+            shadowColor: '#000',
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 6,
+          }}
         >
           <Image
-            source={require('../assets/images/banner.png')}
-            style={tailwind`h-48 w-full`}
-            resizeMode="contain"
+            source={require('../assets/images/user.png')}
+            style={tailwind`w-5 h-5`}
           />
-          <Text style={tailwind`text-white font-bold -mt-5 mb-2`}>
-            Smart expense tracking for every trip.
+        </TouchableOpacity>
+      </View>
+
+      <View
+        style={[
+          tailwind`bg-green-400`,
+          {
+            marginHorizontal: 16,
+            marginBottom: 18,
+            borderRadius: 24,
+            padding: 18,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            shadowColor: '#000',
+            shadowOpacity: 0.25,
+            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            elevation: 8,
+          },
+        ]}
+      >
+        <View style={{ width: '65%' }}>
+          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
+            Track every expense
+          </Text>
+
+          <Text style={{ color: '#E0E7FF', marginTop: 6 }}>
+            Manage trip spending easily and never split bills manually again.
           </Text>
         </View>
-        <View style={tailwind`px-4 flex-row justify-between items-center mb-3`}>
-          <Text style={tailwind`text-xl font-bold ${colors.heading}`}>
-            Recent trips
-          </Text>
-          <TouchableOpacity
-            style={[tailwind`bg-white p-2 px-3 rounded-full`,{backgroundColor:colors.button}]}
-            onPress={() => navigation.navigate('AddTrip')}
-          >
-            <Text style={tailwind`text-white`}>Add Trip</Text>
-          </TouchableOpacity>
-        </View>
+
+        <Image
+          source={require('../assets/images/banner.png')}
+          style={tailwind`w-30 h-30`}
+        />
+      </View>
+
+      <View style={tailwind`px-4 flex-row justify-between items-center mb-2`}>
+        <Text style={tailwind`text-xl font-bold ${colors.heading}`}>
+          Your Trips
+        </Text>
       </View>
 
       <FlatList
-        style={tailwind`flex-1 px-4`}
+        style={[tailwind`flex-1 px-4`]}
         data={trips}
         numColumns={2}
         ListEmptyComponent={
-          <EmptyList message={"You haven't recorded any trips yet"} />
+          <EmptyList
+            message={
+              '                            No trips yet ✈️\nTap the + button to create your first journey!'
+            }
+          />
         }
         keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         contentContainerStyle={{ paddingBottom: 120 }}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={tailwind`bg-white p-3 rounded-2xl mb-3 shadow-sm`}
+          <AnimatedTouchable
+            activeOpacity={0.85}
+            style={[
+              {
+                backgroundColor: '#ffffff',
+                borderRadius: 22,
+                marginBottom: 14,
+                overflow: 'hidden',
+                width: '48%',
+                shadowColor: '#000',
+                shadowOpacity: 0.15,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 5 },
+                elevation: 5,
+              },
+              ListAnimatedStyle,
+            ]}
             onPress={() => navigation.navigate('TripExpense', { ...item })}
           >
-            <Image
-              source={randomImage()}
-              style={{ width: 135, height: 135 }}
-              resizeMode="contain"
-            />
-            <Text
-              style={tailwind`${colors.heading} text-center text-base font-bold`}
-            >
-              {item.place}
-            </Text>
-            <Text style={tailwind`${colors.heading} text-center text-sm`}>
-              {item.country}
-            </Text>
-          </TouchableOpacity>
+            <View style={{ position: 'relative' }}>
+              <Image
+                source={randomImage()}
+                style={{ width: '100%', height: 140 }}
+                resizeMode="cover"
+              />
+
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  width: '100%',
+                  padding: 12,
+                  backgroundColor: 'rgba(0,0,0,0.45)',
+                }}
+              >
+                <Text
+                  style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}
+                >
+                  {item.place}
+                </Text>
+
+                <Text style={{ color: '#E2E8F0', fontSize: 12 }}>
+                  {item.country}
+                </Text>
+              </View>
+            </View>
+          </AnimatedTouchable>
         )}
       />
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('AddTrip')}
+        activeOpacity={0.8}
+        style={{
+          position: 'absolute',
+          bottom: 28,
+          right: 22,
+          backgroundColor: colors.button,
+          width: 64,
+          height: 64,
+          borderRadius: 32,
+          alignItems: 'center',
+          justifyContent: 'center',
+          shadowColor: '#000',
+          shadowOpacity: 0.35,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 12,
+        }}
+      >
+        <Text style={{ color: 'white', fontSize: 30, marginTop: -2 }}>＋</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
