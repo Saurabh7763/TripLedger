@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
 import { colors } from '../theme';
 import BackButton from '../components/BackButton';
+import ProfileFeatures  from '../components/ProfileFeatures'
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { getAuth, signOut } from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -95,46 +96,21 @@ const ProfileScreen = () => {
       
         <View style={tailwind`mt-5 mx-4`}>
 
-         
-          <TouchableOpacity
-            style={tailwind`flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm`}
-            onPress={() => navigation.navigate('Trips')}
-          >
-            <Image
-              source={require('../assets/images/trips.png')}
-              style={tailwind`h-10 w-10 mr-4`}
-            />
-            <Text style={[tailwind`text-lg font-semibold`, { color: colors.heading }]}>
-              Your Trips
-            </Text>
-          </TouchableOpacity>
-
-       
-          <TouchableOpacity
-            style={tailwind`flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm`}
-            onPress={() => navigation.navigate('Notification')}
-          >
-            <Image
-              source={require('../assets/icons/NotiSetting.png')}
-              style={tailwind`h-9 w-9 mr-4`}
-            />
-            <Text style={[tailwind`text-lg font-semibold`, { color: colors.heading }]}>
-              Notification Settings
-            </Text>
-          </TouchableOpacity>
-
-         
-          <TouchableOpacity
-            style={tailwind`flex-row items-center bg-white p-4 rounded-2xl mb-4 shadow-sm`}
-          >
-            <Image
-              source={require('../assets/icons/support.png')}
-              style={tailwind`h-9 w-9 mr-4`}
-            />
-            <Text style={[tailwind`text-lg font-semibold`, { color: colors.heading }]}>
-              Support
-            </Text>
-          </TouchableOpacity>
+          <ProfileFeatures
+            title="Your Trips"
+            link={require('../assets/images/trips.png')}
+            handlePress = {()=>navigation.navigate('Trips')}
+          />
+          <ProfileFeatures
+            title="Notification Settings"
+            link={require('../assets/icons/NotiSetting.png')}
+            handlePress = {()=>navigation.navigate('Notification')}
+          />
+          <ProfileFeatures
+            title="Support"
+            link={require('../assets/icons/support.png')}
+          
+          />
 
         </View>
 
