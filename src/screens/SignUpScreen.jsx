@@ -123,7 +123,7 @@ const SignUpScreen = () => {
               <TextInput
                 placeholder="Minimum 6 characters"
                 placeholderTextColor="#94A3B8"
-                style={tailwind`bg-gray-100 rounded-xl px-4 py-4`}
+                style={tailwind`bg-gray-100 text-black rounded-xl px-4 py-4`}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry

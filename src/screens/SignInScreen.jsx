@@ -95,7 +95,7 @@ const SignInScreen = () => {
               <TextInput
                 placeholder="Enter your password"
                 placeholderTextColor="#94A3B8"
-                style={tailwind`bg-gray-100 rounded-xl px-4 py-4`}
+                style={tailwind`bg-gray-100 text-black rounded-xl px-4 py-4`}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry

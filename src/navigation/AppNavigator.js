@@ -14,6 +14,7 @@ import SignUpScreen from '../screens/SignUpScreen'
 import Loading from '../components/Loading'
 import NotificationScreen from '../screens/NotificationScreen.jsx'
 import AllTripScreen from '../screens/AllTripScreen.jsx'
+import HelpScreen from '../screens/HelpScreen.jsx'
 
 
 const Stack = createNativeStackNavigator()
@@ -44,6 +45,7 @@ const AppNavigator = () => {
           <Stack.Screen name='Profile' component={ProfileScreen}/>
           <Stack.Screen name='Notification' component={NotificationScreen}/>
           <Stack.Screen name='Trips' component={AllTripScreen}/>
+          <Stack.Screen name='Help' component={HelpScreen}/>
         </Stack.Navigator>
       ) : (
         <Stack.Navigator screenOptions={{ headerShown: false }}>

@@ -101,15 +101,11 @@ const ProfileScreen = () => {
             link={require('../assets/images/trips.png')}
             handlePress = {()=>navigation.navigate('Trips')}
           />
-          <ProfileFeatures
-            title="Notification Settings"
-            link={require('../assets/icons/NotiSetting.png')}
-            handlePress = {()=>navigation.navigate('Notification')}
-          />
+          
           <ProfileFeatures
             title="Support"
             link={require('../assets/icons/support.png')}
-          
+            handlePress={()=>navigation.navigate('Help')}
           />
 
         </View>
