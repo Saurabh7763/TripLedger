@@ -21,7 +21,7 @@ import Loading from '../components/Loading';
 const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { userLoading } = useSelector(state => state.user);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -33,12 +33,15 @@ const SignInScreen = () => {
     }
 
     try {
+      setIsLoading(true);
       await Login(email.trim(), password);
     } catch (e) {
       Snackbar.show({
         text: e.message,
         backgroundColor: 'red',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,7 +105,7 @@ const SignInScreen = () => {
               />
 
               <View style={tailwind`mt-6`}>
-                {userLoading ? (
+                {isLoading ? (
                   <Loading />
                 ) : (
                   <TouchableOpacity

@@ -13,7 +13,7 @@ import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
 } from '@react-native-firebase/firestore';
 import Animated, {
   Easing,
@@ -30,7 +30,6 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useSelector(state => state.user);
   const [trips, setTrips] = useState([]);
-  const isFocused = useIsFocused();
   const listTranslateY = useSharedValue(30);
   const listOpacity = useSharedValue(0);
 
@@ -46,29 +45,32 @@ const HomeScreen = () => {
     opacity: listOpacity.value,
   }));
 
-  const fetchTrips = async () => {
-    try {
-      const tripsRef = collection(db, 'trips');
-      const q = query(tripsRef, where('userId', '==', user.uid));
+  useEffect(() => {
+    if (!user) return;
 
-      const snapshot = await getDocs(q);
+    const tripsRef = collection(db, 'trips');
+    const q = query(tripsRef, where('userId', '==', user.uid));
 
+    const unsubscribe = onSnapshot(q, snapshot => {
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
+      
+      // Sort by newest first to avoid needing a Firebase composite index
+      data.sort((a, b) => {
+        const timeA = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+        const timeB = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+        return timeB - timeA;
+      });
 
       setTrips(data);
-    } catch (error) {
-      console.log('Fetch trips error:', error);
-    }
-  };
+    }, error => {
+      console.log('Realtime fetch trips error:', error);
+    });
 
-  useEffect(() => {
-    if (isFocused && user) {
-      fetchTrips();
-    }
-  }, [isFocused, user]);
+    return unsubscribe;
+  }, [user]);
 
   return (
     <SafeAreaView style={[tailwind`flex-1`, { backgroundColor: '#F1F5F9' }]}>

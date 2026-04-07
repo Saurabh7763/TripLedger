@@ -65,6 +65,13 @@ const AllTripScreen = () => {
       ...doc.data(),
     }));
 
+    // Sort by newest first
+    data.sort((a, b) => {
+      const timeA = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
+      const timeB = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+      return timeB - timeA;
+    });
+
     setTrips(data);
   });
 
@@ -166,10 +173,10 @@ const AllTripScreen = () => {
                 {item.country}
               </Text>
 
-              <Text style={tailwind`text-center`}>
-                {item.createdAt
+              <Text style={tailwind`text-center mt-1 text-xs text-gray-500 font-medium`}>
+                {item.createdAt && item.createdAt.seconds
                   ? new Date(item.createdAt.seconds * 1000).toLocaleDateString()
-                  : ""}
+                  : "Just now"}
               </Text>
             </AnimatedTouchable>
           )}

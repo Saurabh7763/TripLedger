@@ -48,14 +48,15 @@ const AddExpenseScreen = props => {
       setLoading(true);
       const expRefs = collection(db, 'expenses')
 
-      await addDoc(expRefs,{
-        title,
+      // Optimistic UI: Sync to cache immediately, don't hang network
+      addDoc(expRefs,{
+          title,
           amount: Number(amount),
           paidby,
           category,
           tripId: id,
-          createdAt:serverTimestamp(),
-      })
+          createdAt: serverTimestamp(),
+      }).catch(err => console.log('Expense sync error', err));
 
       showSuccess('Expense Added 💰');
       navigation.goBack();
