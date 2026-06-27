@@ -15,28 +15,31 @@ import { colors } from '../theme';
 import BackButton from '../components/BackButton';
 import Snackbar from 'react-native-snackbar';
 import { createUser } from '../firebase/firebaseServices';
-import { useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import Loading from '../components/Loading';
+import { EnvelopeIcon, LockClosedIcon, UserIcon } from 'react-native-heroicons/outline';
 
 const SignUpScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const navigation = useNavigation();
 
   const handleSubmit = async () => {
     if (!email || !password) {
       Snackbar.show({
         text: 'Email and Password are required!',
-        backgroundColor: 'red',
+        backgroundColor: '#EF4444',
+        duration: Snackbar.LENGTH_SHORT,
       });
       return;
     }
 
-    // Firebase minimum password rule
     if (password.length < 6) {
       Snackbar.show({
         text: 'Password must be at least 6 characters',
-        backgroundColor: 'red',
+        backgroundColor: '#EF4444',
+        duration: Snackbar.LENGTH_SHORT,
       });
       return;
     }
@@ -47,7 +50,8 @@ const SignUpScreen = () => {
     } catch (e) {
       Snackbar.show({
         text: e.message,
-        backgroundColor: 'red',
+        backgroundColor: '#EF4444',
+        duration: Snackbar.LENGTH_LONG,
       });
     } finally {
       setIsLoading(false);
@@ -55,111 +59,111 @@ const SignUpScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#EEF2FF' }}>
-      
-      {/* This prevents keyboard from covering inputs */}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        
-        {/* This makes screen scrollable */}
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ flexGrow: 1 }}
         >
-          
-          <View style={tailwind`flex-1 px-5`}>
+          <View style={tailwind`flex-1 px-6 pt-4`}>
 
-            {/* Back Button */}
-            <BackButton />
+            <View style={tailwind`flex-row justify-between items-center`}>
+              <BackButton />
+            </View>
 
-            {/* Heading */}
-            <Text
-              style={[
-                tailwind`text-3xl font-bold mt-4`,
-                { color: colors.heading },
-              ]}
-            >
-              Create Account ✨
-            </Text>
+            <View style={tailwind`mt-8 mb-6`}>
+              <Text style={[tailwind`text-4xl font-extrabold tracking-tight`, { color: '#1E293B' }]}>
+                Join Us
+              </Text>
+              <Text style={tailwind`text-slate-500 text-lg mt-1`}>
+                Start tracking your trip expenses
+              </Text>
+            </View>
 
-            <Text style={tailwind`text-gray-500 mt-2`}>
-              Start tracking your trip expenses
-            </Text>
-
-            {/* Illustration */}
-            <View style={tailwind`items-center my-6`}>
+            <View style={tailwind`items-center mb-8`}>
               <Image
                 source={require('../assets/images/signup.png')}
-                style={{ width: 240, height: 240 }}
+                style={{ width: 220, height: 220 }}
                 resizeMode="contain"
               />
             </View>
 
-            {/* Form Card */}
-            <View
-              style={{
-                backgroundColor: 'white',
-                padding: 20,
-                borderRadius: 24,
-                elevation: 10,
-              }}
-            >
+            <View style={{
+              backgroundColor: 'white',
+              padding: 24,
+              borderRadius: 32,
+              shadowColor: '#64748B',
+              shadowOpacity: 0.1,
+              shadowRadius: 20,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 8,
+              borderWidth: 1,
+              borderColor: '#F1F5F9'
+            }}>
 
-              {/* Email */}
-              <Text style={tailwind`text-gray-600 mb-2`}>Email</Text>
-              <TextInput
-                placeholder="example@gmail.com"
-                placeholderTextColor="#94A3B8"
-                style={tailwind`bg-gray-100 rounded-xl px-4 py-4 mb-4`}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                returnKeyType="next"
-              />
+              <Text style={tailwind`text-slate-700 font-semibold mb-2 ml-1`}>Email Address</Text>
+              <View style={tailwind`flex-row items-center bg-slate-50 rounded-2xl px-4 mb-4 border border-slate-100`}>
+                <EnvelopeIcon size={20} color="#94A3B8" />
+                <TextInput
+                  placeholder="name@example.com"
+                  placeholderTextColor="#94A3B8"
+                  style={tailwind`flex-1 px-3 py-4 text-slate-800 text-base`}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
 
-              {/* Password */}
-              <Text style={tailwind`text-gray-600 mb-2`}>Password</Text>
-              <TextInput
-                placeholder="Minimum 6 characters"
-                placeholderTextColor="#94A3B8"
-                style={tailwind`bg-gray-100 text-black rounded-xl px-4 py-4`}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                returnKeyType="done"
-              />
+              <Text style={tailwind`text-slate-700 font-semibold mb-2 ml-1`}>Password</Text>
+              <View style={tailwind`flex-row items-center bg-slate-50 rounded-2xl px-4 border border-slate-100`}>
+                <LockClosedIcon size={20} color="#94A3B8" />
+                <TextInput
+                  placeholder="••••••••"
+                  placeholderTextColor="#94A3B8"
+                  style={tailwind`flex-1 px-3 py-4 text-slate-800 text-base`}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              </View>
 
-              {/* Button */}
-              <View style={tailwind`mt-6`}>
+              <View style={tailwind`mt-8`}>
                 {isLoading ? (
                   <Loading />
                 ) : (
                   <TouchableOpacity
                     onPress={handleSubmit}
+                    activeOpacity={0.8}
                     style={{
                       backgroundColor: colors.button,
-                      paddingVertical: 16,
-                      borderRadius: 16,
+                      paddingVertical: 18,
+                      borderRadius: 20,
                       alignItems: 'center',
+                      shadowColor: colors.button,
+                      shadowOpacity: 0.3,
+                      shadowRadius: 12,
+                      shadowOffset: { width: 0, height: 6 },
+                      elevation: 6
                     }}
                   >
-                    <Text
-                      style={{
-                        color: 'white',
-                        fontSize: 17,
-                        fontWeight: 'bold',
-                      }}
-                    >
+                    <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
                       Sign Up
                     </Text>
                   </TouchableOpacity>
                 )}
               </View>
+            </View>
 
+            <View style={tailwind`flex-row justify-center mt-8 pb-6`}>
+              <Text style={tailwind`text-slate-500 text-base`}>Already have an account? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+                <Text style={{ color: colors.button, fontSize: 16, fontWeight: 'bold' }}>Sign In</Text>
+              </TouchableOpacity>
             </View>
 
           </View>

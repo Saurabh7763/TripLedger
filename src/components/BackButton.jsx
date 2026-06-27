@@ -9,10 +9,14 @@ const BackButton = () => {
   const navigation = useNavigation()
   return (
     <TouchableOpacity 
-       style={tailwind`bg-white rounded-full h-8 w-8`}
+       activeOpacity={0.7}
+       style={[
+         tailwind`bg-white rounded-2xl items-center justify-center`,
+         { width: 44, height: 44, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }
+       ]}
        onPress={()=>navigation.goBack()}
     >
-      <ChevronLeftIcon width={30} height={30} color={colors.button} />
+      <ChevronLeftIcon width={24} height={24} color={colors.button} strokeWidth={2.5} />
     </TouchableOpacity>
   )
 }
