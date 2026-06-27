@@ -23,7 +23,10 @@ const AddTripScreen = () => {
   const navigation = useNavigation();
 
   const handleAddTrip = async () => {
-    if (!place || !country) {
+    const trimmedPlace = place.trim();
+    const trimmedCountry = country.trim();
+
+    if (!trimmedPlace || !trimmedCountry) {
       Snackbar.show({
         text: 'Place and country are required!',
         backgroundColor: 'red',
@@ -35,20 +38,25 @@ const AddTripScreen = () => {
 
     try {
       const tripsRef = collection(db, 'trips');
-
-      // Optimistic UI: Don't await server confirmation, Firebase SDK handles background sync
-      addDoc(tripsRef, {
-        place,
-        country,
+      
+      const tripData = {
+        place: trimmedPlace,
+        country: trimmedCountry,
         userId: user.uid,
         createdAt: serverTimestamp(),
-      }).catch(err => console.log("Background sync error:", err));
+      };
+
+      console.log('ADDING TRIP:', tripData);
+
+      // Sync to local cache and server
+      await addDoc(tripsRef, tripData);
 
       showSuccess('Trip Created ✈️');
       navigation.goBack();
     } catch (e) {
+      console.log('Error adding trip:', e);
       Snackbar.show({
-        text: 'Failed to create trip',
+        text: e.message || 'Failed to create trip',
         backgroundColor: 'red',
       });
     } finally {

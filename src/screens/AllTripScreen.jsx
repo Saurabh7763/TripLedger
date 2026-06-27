@@ -65,10 +65,10 @@ const AllTripScreen = () => {
       ...doc.data(),
     }));
 
-    // Sort by newest first
+    // Sort by newest first. Handle null createdAt by putting it at top.
     data.sort((a, b) => {
-      const timeA = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : 0;
-      const timeB = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : 0;
+      const timeA = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : Date.now() / 1000;
+      const timeB = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : Date.now() / 1000;
       return timeB - timeA;
     });
 
