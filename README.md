@@ -10,7 +10,11 @@ Built using **React Native CLI**, **Firebase Authentication**, and **Cloud Fires
 ## Video
 
 
-https://github.com/user-attachments/assets/02d0a283-d6f7-4ead-9547-126403ee5fee
+
+
+https://github.com/user-attachments/assets/7866cd27-0b06-4be7-bff8-27409a348ab3
+
+
 
 
 ---
@@ -198,7 +202,6 @@ expenses
 * Balance settlement between friends
 * Export trip report (PDF)
 * Currency conversion
-* Dark mode
 * Offline support
 
 ---
