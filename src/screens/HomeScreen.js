@@ -1,238 +1,182 @@
-import { View, Text, TouchableOpacity, Image, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  FlatList,
+} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
 import { colors } from '../theme';
-import randomImage from '../assets/images/randomImage';
 import EmptyList from '../components/EmptyList';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { getApp } from '@react-native-firebase/app';
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  onSnapshot,
-} from '@react-native-firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot } from '@react-native-firebase/firestore';
 import Animated, {
-  Easing,
-  useAnimatedStyle,
   useSharedValue,
+  useAnimatedStyle,
   withSpring,
   withTiming,
+  Easing,
 } from 'react-native-reanimated';
+import randomImage from '../assets/images/randomImage';
+import { PlusIcon, MapPinIcon } from 'react-native-heroicons/outline';
+import { useTheme } from '../context/ThemeContext';
 
-const db = getFirestore(getApp());
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+const db = getFirestore(getApp());
 
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const { user } = useSelector(state => state.user);
-  const [trips, setTrips] = useState([]);
-  const listTranslateY = useSharedValue(30);
+  const { theme } = useTheme();
+  const [recentTrips, setRecentTrips] = useState([]);
+
+  const listTranslateY = useSharedValue(20);
   const listOpacity = useSharedValue(0);
 
   useEffect(() => {
-    listTranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
-    listOpacity.value = withTiming(1, {
-      duration: 800,
-      easing: Easing.out(Easing.exp),
-    });
-  }, []);
-  const ListAnimatedStyle = useAnimatedStyle(() => ({
+    if (isFocused) {
+      listTranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
+      listOpacity.value = withTiming(1, { duration: 800, easing: Easing.out(Easing.exp) });
+    }
+  }, [isFocused]);
+
+  const listAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: listTranslateY.value }],
     opacity: listOpacity.value,
   }));
 
   useEffect(() => {
     if (!user) return;
-
     const tripsRef = collection(db, 'trips');
     const q = query(tripsRef, where('userId', '==', user.uid));
-
-    const unsubscribe = onSnapshot(q, snapshot => {
-      const data = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      
-      // Sort by newest first. Handle null createdAt (local cache) by putting it at top.
-      data.sort((a, b) => {
-        const timeA = a.createdAt && a.createdAt.seconds ? a.createdAt.seconds : Date.now() / 1000;
-        const timeB = b.createdAt && b.createdAt.seconds ? b.createdAt.seconds : Date.now() / 1000;
-        return timeB - timeA;
-      });
-
-      setTrips(data);
-    }, error => {
-      console.log('Realtime fetch trips error:', error);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      setRecentTrips(data.slice(0, 4));
     });
-
     return unsubscribe;
   }, [user]);
 
   return (
-    <SafeAreaView style={[tailwind`flex-1`, { backgroundColor: '#F1F5F9' }]}>
-      <View
-        style={tailwind`px-4 pt-2 mb-3 flex-row justify-between items-center`}
-      >
-        <View>
-          <Text style={tailwind`text-slate-500 text-sm`}>Welcome back 👋</Text>
-
-          <Text style={tailwind`text-3xl font-extrabold ${colors.heading}`}>
-            TripLedger
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Profile')}
-          style={{
-            backgroundColor: '#ffffff',
-            padding: 10,
-            borderRadius: 50,
-            shadowColor: '#000',
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            shadowOffset: { width: 0, height: 4 },
-            elevation: 6,
-          }}
-        >
-          <Image
-            source={require('../assets/images/user.png')}
-            style={tailwind`w-5 h-5`}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View
-        style={[
-          tailwind`bg-green-400`,
-          {
-            marginHorizontal: 16,
-            marginBottom: 18,
-            borderRadius: 24,
-            padding: 18,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            shadowColor: '#000',
-            shadowOpacity: 0.25,
-            shadowRadius: 12,
-            shadowOffset: { width: 0, height: 6 },
-            elevation: 8,
-          },
-        ]}
-      >
-        <View style={{ width: '65%' }}>
-          <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>
-            Track every expense
-          </Text>
-
-          <Text style={{ color: '#E0E7FF', marginTop: 6 }}>
-            Manage trip spending easily and never split bills manually again.
-          </Text>
-        </View>
-
-        <Image
-          source={require('../assets/images/banner.png')}
-          style={tailwind`w-30 h-30`}
-        />
-      </View>
-
-      <View style={tailwind`px-4 flex-row justify-between items-center mb-2`}>
-        <Text style={tailwind`text-xl font-bold ${colors.heading}`}>
-          Your Trips
-        </Text>
-      </View>
-
-      <FlatList
-        style={[tailwind`flex-1 px-4`]}
-        data={trips}
-        numColumns={2}
-        ListEmptyComponent={
-          <EmptyList
-            message={
-              '                            No trips yet ✈️\nTap the + button to create your first journey!'
-            }
-          />
-        }
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        renderItem={({ item }) => (
-          <AnimatedTouchable
-            activeOpacity={0.85}
+    <SafeAreaView style={[tailwind`flex-1`, { backgroundColor: theme.background }]}>
+      {/* Header */}
+      <View style={tailwind`px-6 pt-4`}>
+        <View style={tailwind`flex-row justify-between items-center mb-8`}>
+          <View>
+            <Text style={[tailwind`text-sm font-bold tracking-widest`, { color: theme.placeholder }]}>WELCOME BACK</Text>
+            <Text style={[tailwind`text-3xl font-black`, { color: theme.text }]}>
+              {user?.email?.split('@')[0]}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            onPress={() => navigation.navigate('Profile')}
+            activeOpacity={0.8}
             style={[
-              {
-                backgroundColor: '#ffffff',
-                borderRadius: 22,
-                marginBottom: 14,
-                overflow: 'hidden',
-                width: '48%',
-                shadowColor: '#000',
-                shadowOpacity: 0.15,
-                shadowRadius: 10,
-                shadowOffset: { width: 0, height: 5 },
-                elevation: 5,
-              },
-              ListAnimatedStyle,
+              tailwind`p-1 rounded-2xl border`,
+              { backgroundColor: theme.card, borderColor: theme.cardBorder }
             ]}
-            onPress={() => navigation.navigate('TripExpense', { ...item })}
           >
-            <View style={{ position: 'relative' }}>
-              <Image
-                source={randomImage()}
-                style={{ width: '100%', height: 140 }}
-                resizeMode="cover"
-              />
+            <Image
+              source={require('../assets/images/user.png')}
+              style={tailwind`h-12 w-12 rounded-xl`}
+            />
+          </TouchableOpacity>
+        </View>
 
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  width: '100%',
-                  padding: 12,
-                  backgroundColor: 'rgba(0,0,0,0.45)',
-                }}
-              >
-                <Text
-                  style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}
-                >
-                  {item.place}
-                </Text>
+        {/* Hero Banner */}
+        <View style={[
+          tailwind`bg-emerald-400 p-6 rounded-[32px] flex-row items-center justify-between mb-8 shadow-lg`,
+          { shadowColor: colors.button, shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 12 }
+        ]}>
+          <View style={tailwind`flex-1 mr-4`}>
+            <Text style={tailwind`text-white text-2xl font-black leading-7 mb-2`}>
+              Adventure awaits!
+            </Text>
+            <Text style={tailwind`text-emerald-50 text-xs font-bold leading-4 opacity-90`}>
+              Track every expense and share the joy with your travel Buddies.
+            </Text>
+          </View>
+          <Image
+            source={require('../assets/images/banner.png')}
+            style={tailwind`h-28 w-28`}
+            resizeMode="contain"
+          />
+        </View>
 
-                <Text style={{ color: '#E2E8F0', fontSize: 12 }}>
-                  {item.country}
-                </Text>
+        {/* Section Title */}
+        <View style={tailwind`flex-row justify-between items-center mb-4`}>
+          <Text style={[tailwind`text-2xl font-black`, { color: theme.text }]}>
+            Recent Trips
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Trips')}>
+            <Text style={[tailwind`font-bold`, { color: theme.button }]}>See All</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Trips List — outside the px-6 View so FlatList has full flex space */}
+      <Animated.View style={[tailwind`flex-1 px-6`, listAnimatedStyle]}>
+        <FlatList
+          data={recentTrips}
+          numColumns={2}
+          ListEmptyComponent={<EmptyList message="No recent trips. Plan a new one!" />}
+          keyExtractor={item => item.id}
+          showsVerticalScrollIndicator={false}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          renderItem={({ item }) => (
+            <AnimatedTouchable
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('TripExpense', { ...item })}
+              style={[
+                tailwind`p-3 rounded-[28px] mb-5 border w-[47%] items-center shadow-sm`,
+                { 
+                  backgroundColor: theme.card, 
+                  borderColor: theme.cardBorder,
+                  shadowColor: theme.text,
+                  shadowOpacity: 0.05,
+                  shadowRadius: 10,
+                  elevation: 4
+                }
+              ]}
+            >
+              <View style={tailwind`mb-3`}>
+                <Image source={randomImage()} style={tailwind`h-28 w-28`} resizeMode="contain" />
               </View>
-            </View>
-          </AnimatedTouchable>
-        )}
-      />
+              <View style={tailwind`items-center`}>
+                <Text style={[tailwind`text-lg font-black text-center`, { color: theme.text }]} numberOfLines={1}>{item.place}</Text>
+                <View style={tailwind`flex-row items-center mt-1`}>
+                  <MapPinIcon size={12} color={theme.placeholder} />
+                  <Text style={[tailwind`text-[10px] font-bold ml-1`, { color: theme.placeholder }]} numberOfLines={1}>{item.country}</Text>
+                </View>
+              </View>
+            </AnimatedTouchable>
+          )}
+        />
+      </Animated.View>
 
+      {/* Floating Action Button */}
       <TouchableOpacity
         onPress={() => navigation.navigate('AddTrip')}
         activeOpacity={0.8}
-        style={{
-          position: 'absolute',
-          bottom: 28,
-          right: 22,
-          backgroundColor: colors.button,
-          width: 64,
-          height: 64,
-          borderRadius: 32,
-          alignItems: 'center',
-          justifyContent: 'center',
-          shadowColor: '#000',
-          shadowOpacity: 0.35,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 6 },
-          elevation: 12,
-        }}
+        style={[
+          tailwind`absolute bottom-10 right-8 w-16 h-16 rounded-[22px] items-center justify-center shadow-xl`,
+          { 
+            backgroundColor: '#1E293B',
+            shadowColor: '#000',
+            shadowOpacity: 0.3,
+            shadowRadius: 15,
+            shadowOffset: { width: 0, height: 10 },
+            elevation: 10
+          }
+        ]}
       >
-        <Text style={{ color: 'white', fontSize: 30, marginTop: -2 }}>＋</Text>
+        <PlusIcon size={30} color="white" strokeWidth={2.5} />
       </TouchableOpacity>
     </SafeAreaView>
   );

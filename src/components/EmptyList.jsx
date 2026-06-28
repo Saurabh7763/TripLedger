@@ -1,19 +1,23 @@
-import { View, Text, Image } from 'react-native'
-import React from 'react'
-import tailwind from 'twrnc'
+import { View, Text, Image } from 'react-native';
+import React from 'react';
+import tailwind from 'twrnc';
+import { useTheme } from '../context/ThemeContext';
 
-const EmptyList = ({message}) => {
+const EmptyList = ({ message }) => {
+  const { theme, isDark } = useTheme();
+
   return (
-    <View style={tailwind`flex justify-center items-center my-5`}>
-      <Image
-        style={tailwind`w-36 h-36 mb-2`}
-        source={require(`../assets/images/empty.png`)}
+    <View style={tailwind`flex justify-center items-center my-10`}>
+      <Image 
+        source={require('../assets/images/empty.png')} 
+        style={[tailwind`h-48 w-48`, { opacity: isDark ? 0.3 : 0.8 }]} 
+        resizeMode="contain"
       />
-      <Text 
-        style={tailwind`font-bold text-gray-400`}
-      >{message || 'data not found'} </Text>
+      <Text style={[tailwind`font-bold text-center mt-6 text-lg`, { color: theme.subText }]}>
+        {message || "Nothing to show here"}
+      </Text>
     </View>
-  )
-}
+  );
+};
 
 export default EmptyList

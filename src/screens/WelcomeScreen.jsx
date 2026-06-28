@@ -1,117 +1,125 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import React, { useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
-import { colors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
-import { googleSignup } from '../firebase/googleSignup';
-import { showSuccess, showError } from '../utils/showToast';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withDelay, 
   withTiming,
-} from "react-native-reanimated";
+} from 'react-native-reanimated';
+import { useTheme } from '../context/ThemeContext';
 
 const WelcomeScreen = () => {
   const navigation = useNavigation();
-  const Image1TranslateY = useSharedValue(30);
-  const Image2TranslateY = useSharedValue(30);
-  const Image1Opacity = useSharedValue(0);
-  const Image2Opacity = useSharedValue(0);
+  const { theme } = useTheme();
+  
+  const logoScale = useSharedValue(0.3);
+  const logoOpacity = useSharedValue(0);
+  const textOpacity = useSharedValue(0);
+  const textTranslateY = useSharedValue(20);
+  const btnTranslateY = useSharedValue(30);
+  const btnOpacity = useSharedValue(0);
 
   useEffect(() => {
-    Image1TranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
-    Image1Opacity.value = withTiming(1, {
-      duration: 800,
-      easing: Easing.out(Easing.exp),
-    });
-
-    setTimeout(() => {
-      Image2TranslateY.value = withSpring(0, { damping: 12, stiffness: 100 });
-      Image2Opacity.value = withTiming(1, {
-        duration: 800,
-        easing: Easing.out(Easing.exp),
-      });
-    }, 200);
+    logoScale.value = withSpring(1, { damping: 12, stiffness: 100 });
+    logoOpacity.value = withTiming(1, { duration: 1000 });
+    
+    textOpacity.value = withDelay(400, withTiming(1, { duration: 800 }));
+    textTranslateY.value = withDelay(400, withSpring(0));
+    
+    btnOpacity.value = withDelay(800, withTiming(1, { duration: 800 }));
+    btnTranslateY.value = withDelay(800, withSpring(0));
   }, []);
 
-  const Image1animatedstyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: Image1TranslateY.value }],
-    opacity: Image1Opacity.value,
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: logoScale.value }],
+    opacity: logoOpacity.value
   }));
 
-    const Image2animatedstyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: Image2TranslateY.value }],
-    opacity: Image2Opacity.value,
+  const textStyle = useAnimatedStyle(() => ({
+    opacity: textOpacity.value,
+    transform: [{ translateY: textTranslateY.value }]
   }));
 
-
-  const handleGoogleSignup = async () => {
-    try {
-      const user = await googleSignup();
-      showSuccess('Welcome 👋', user?.displayName || user?.email);
-    } catch (e) {
-      showError('Login Failed', e.message);
-    }
-  };
+  const btnStyle = useAnimatedStyle(() => ({
+    opacity: btnOpacity.value,
+    transform: [{ translateY: btnTranslateY.value }]
+  }));
 
   return (
-    <SafeAreaView>
-      <View style={tailwind`flex h-full justify-evenly`}>
-        <Animated.View style={[tailwind`flex-row justify-center `,Image1animatedstyle]}>
-          <Image
-            source={require('../assets/images/welcomelogo.png')}
-            style={tailwind`w-96 h-96`}
-          />
+    <SafeAreaView style={[tailwind`flex-1`, { backgroundColor: theme.background }]}>
+      <View style={tailwind`h-full flex justify-around items-center px-8`}>
+        
+        <Animated.View style={[tailwind`items-center`, logoStyle]}>
+          <View style={[
+            tailwind`p-4 rounded-[40px]`,
+            { 
+              backgroundColor: theme.card,
+              shadowColor: theme.button,
+              shadowOpacity: 0.2,
+              shadowRadius: 25,
+              shadowOffset: { width: 0, height: 10 },
+              elevation: 20
+            }
+          ]}>
+            <Image
+              source={require('../assets/images/welcomelogo.png')}
+              style={tailwind`h-64 w-64`}
+              resizeMode="contain"
+            />
+          </View>
         </Animated.View>
 
-        <View style={tailwind`mx-5`}>
-          <Animated.Image 
-            source={require('../assets/images/my-TripLedger.png')}
-           style={[tailwind`mx-auto h-10 mb-10`,Image2animatedstyle]}
-          />
-
-          <TouchableOpacity
-            style={[
-              tailwind`py-3 rounded-full mb-3`,
-              { backgroundColor: colors.button },
-            ]}
-            onPress={() => navigation.navigate('SignIn')}
-          >
-            <Text style={tailwind`text-lg font-bold text-white text-center`}>
-              Sign In
+        <View style={tailwind`w-full`}>
+          <Animated.View style={[tailwind`items-center mb-10`, textStyle]}>
+            <Text style={[
+              tailwind`text-5xl font-black mb-2 tracking-tighter`,
+              { color: theme.text }
+            ]}>
+              TripLedger
             </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              tailwind`py-3 rounded-full mb-3`,
-              { backgroundColor: colors.button },
-            ]}
-            onPress={() => navigation.navigate('SignUp')}
-          >
-            <Text style={tailwind`text-lg font-bold text-white text-center`}>
-              Sign Up
+            <Text style={[
+              tailwind`text-lg font-bold text-center px-4`,
+              { color: theme.subText }
+            ]}>
+              Your premium companion for effortless group expense tracking.
             </Text>
-          </TouchableOpacity>
+          </Animated.View>
 
-          <TouchableOpacity
-            style={tailwind`py-3 rounded-full mb-3 bg-gray-300 flex-row items-center justify-center`}
-            onPress={handleGoogleSignup}
-          >
-            <Image
-              source={require('../assets/images/googleIcon.png')}
-              style={tailwind`h-7 w-7 mr-4`}
-            />
-            <Text
-              style={tailwind`text-lg font-bold ${colors.heading} text-center`}
+          <Animated.View style={[tailwind`w-full`, btnStyle]}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('SignIn')}
+              style={[
+                tailwind`py-5 rounded-[24px] mb-4 items-center shadow-lg`,
+                { 
+                  backgroundColor: theme.button,
+                  shadowColor: theme.button,
+                  shadowOpacity: 0.3,
+                  shadowRadius: 15,
+                  shadowOffset: { width: 0, height: 8 },
+                  elevation: 10
+                }
+              ]}
             >
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
+              <Text style={[tailwind`text-xl font-black`, { color: theme.buttonText }]}>
+                Get Started
+              </Text>
+            </TouchableOpacity>
+
+            <View style={tailwind`flex-row justify-center items-center`}>
+              <View style={[tailwind`h-[1px] w-8`, { backgroundColor: theme.divider }]} />
+              <Text style={[tailwind`mx-4 font-bold`, { color: theme.placeholder }]}>
+                Premium Experience
+              </Text>
+              <View style={[tailwind`h-[1px] w-8`, { backgroundColor: theme.divider }]} />
+            </View>
+          </Animated.View>
         </View>
+
       </View>
     </SafeAreaView>
   );

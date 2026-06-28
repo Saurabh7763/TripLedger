@@ -1,243 +1,204 @@
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tailwind from 'twrnc';
-import { colors } from '../theme';
+import { categoryBG, categoryBGDark, colors } from '../theme';
 import BackButton from '../components/BackButton';
 import { useNavigation } from '@react-navigation/native';
-import Snackbar from 'react-native-snackbar';
+import Loading from '../components/Loading';
 import { getApp } from '@react-native-firebase/app';
 import { getFirestore, collection, addDoc, serverTimestamp } from '@react-native-firebase/firestore';
-import Loading from '../components/Loading';
-import { categories } from '../constants';
-import { showSuccess } from '../utils/showToast';
+import { showSuccess, showError } from '../utils/showToast';
+import {
+  CurrencyRupeeIcon,
+  TagIcon,
+  PencilSquareIcon,
+  CheckCircleIcon,
+  UserIcon
+} from 'react-native-heroicons/solid';
+import { useTheme } from '../context/ThemeContext';
 
 const db = getFirestore(getApp());
 
+const categories = [
+  { title: 'Food', value: 'food' },
+  { title: 'Commute', value: 'commute' },
+  { title: 'Shopping', value: 'shopping' },
+  { title: 'Entertainment', value: 'entertainment' },
+  { title: 'Other', value: 'other' },
+];
 
 const AddExpenseScreen = props => {
   const { id } = props.route.params;
-
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
-  const [paidby, setPaidby] = useState('');
   const [category, setCategory] = useState('');
+  const [paidby, setPaidby] = useState('');
   const [loading, setLoading] = useState(false);
-
   const navigation = useNavigation();
+  const { theme, isDark } = useTheme();
 
   const handleAddExpense = async () => {
-    if (!title || !amount || !paidby || !category) {
-      Snackbar.show({
-        text: 'Please fill all the fields',
-        backgroundColor: 'red',
-      });
-      return;
-    }
-
-    try {
+    if (title && amount && category && paidby) {
       setLoading(true);
-      const expRefs = collection(db, 'expenses');
-
-      // Sync to local cache and server
-      await addDoc(expRefs, {
-        title,
-        amount: Number(amount),
-        paidby,
-        category,
-        tripId: id,
-        createdAt: serverTimestamp(),
-      });
-
-      showSuccess('Expense Added 💰');
-      navigation.goBack();
-    } catch (error) {
-      console.log('Error adding expense:', error);
-      Snackbar.show({
-        text: error.message || 'Something went wrong',
-        backgroundColor: 'red',
-      });
-    } finally {
-      setLoading(false);
+      try {
+        await addDoc(collection(db, 'expenses'), {
+          title,
+          amount,
+          category,
+          paidby,
+          tripId: id,
+          createdAt: serverTimestamp()
+        });
+        setLoading(false);
+        showSuccess('Expense Added 💸');
+        navigation.goBack();
+      } catch (e) {
+        setLoading(false);
+        showError('Error', 'Failed to add expense');
+      }
+    } else {
+      showError('Missing Info', 'Please fill all fields');
     }
   };
 
+  const catBG = isDark ? categoryBGDark : categoryBG;
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F1F5F9' }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 30 }}
-        >
-         
-          <View style={tailwind`px-4 pt-2`}>
-            <View style={tailwind`flex-row items-center justify-between`}>
-              <BackButton />
-              <Text style={tailwind`text-xl font-bold ${colors.heading}`}>
-                Add Expense
-              </Text>
-              <View style={{ width: 40 }} />
-            </View>
+    <SafeAreaView style={[tailwind`flex-1`, { backgroundColor: theme.background }]}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={tailwind`px-6 pt-4 pb-10`}>
+
+          {/* Header */}
+          <View style={tailwind`flex-row items-center mb-8`}>
+            <BackButton />
+            <Text style={[tailwind`text-2xl font-black ml-4`, { color: theme.text }]}>
+              Add
+            </Text>
           </View>
 
-          
-          <View
-            style={[tailwind`bg-green-400`,{
-              marginHorizontal: 20,
-              marginTop: 15,
-              borderRadius: 26,
-              padding: 15,
-              alignItems: 'center',
-              elevation: 10,
-            }]}
-          >
+          {/* Banner Illustration */}
+          <View style={[
+            tailwind`rounded-[40px] items-center justify-center py-8 mb-10 shadow-lg`,
+            {
+              backgroundColor: isDark ? theme.card : '#F8FAFC',
+              borderWidth: 1,
+              borderColor: theme.cardBorder
+            }
+          ]}>
             <Image
               source={require('../assets/images/expenseBanner.png')}
-              style={{ height: 170, width: 170, marginBottom: 10 }}
+              style={tailwind`h-48 w-48`}
               resizeMode="contain"
             />
-
-            <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
-              Record your spending 💸
-            </Text>
-
-            <Text
-              style={{
-                color: '#DCFCE7',
-                textAlign: 'center',
-                marginTop: 6,
-                paddingHorizontal: 10,
-              }}
-            >
-              Keep track of every rupee you spend on this trip.
-            </Text>
           </View>
 
-          
-          <View style={tailwind`px-5 mt-6`}>
-          
-            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
-              Expense Title
-            </Text>
-            <View style={tailwind`bg-white rounded-2xl px-4 py-2 mb-4 shadow`}>
-              <TextInput
-                placeholder="e.g. Hotel, Food, Taxi"
-                placeholderTextColor="#94A3B8"
-                style={{ fontSize: 16 }}
-                value={title}
-                onChangeText={setTitle}
-              />
+          {/* Form Fields */}
+          <View style={tailwind`gap-y-6`}>
+            <View>
+              <Text style={[tailwind`text-xs font-black tracking-widest mb-3 ml-1`, { color: theme.subText }]}>FOR WHAT?</Text>
+              <View style={[tailwind`flex-row items-center rounded-2xl px-4 border shadow-sm`, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+                <PencilSquareIcon size={20} color={theme.placeholder} />
+                <TextInput
+                  value={title}
+                  onChangeText={setTitle}
+                  placeholder="e.g. Dinner, Taxi, Souvenir"
+                  placeholderTextColor={theme.placeholder}
+                  style={[tailwind`flex-1 px-3 py-4 text-base font-black`, { color: theme.text }]}
+                />
+              </View>
             </View>
 
-           
-            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
-              Amount
-            </Text>
-            <View
-              style={tailwind`bg-white rounded-2xl px-4 py-3 mb-4 flex-row items-center shadow`}
-            >
-              <Text
-                style={{ fontSize: 18, fontWeight: 'bold', marginRight: 6 }}
-              >
-                ₹
-              </Text>
-              <TextInput
-                placeholder="0"
-                placeholderTextColor="#94A3B8"
-                style={{ fontSize: 18, flex: 1 }}
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="numeric"
-              />
+            <View>
+              <Text style={[tailwind`text-xs font-black tracking-widest mb-3 ml-1`, { color: theme.subText }]}>HOW MUCH?</Text>
+              <View style={[tailwind`flex-row items-center rounded-2xl px-4 border shadow-sm`, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+                <CurrencyRupeeIcon size={20} color={theme.placeholder} />
+                <TextInput
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyboardType="numeric"
+                  placeholder="0.00"
+                  placeholderTextColor={theme.placeholder}
+                  style={[tailwind`flex-1 px-3 py-4 text-base font-black`, { color: theme.text }]}
+                />
+              </View>
             </View>
 
-            
-            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
-              Who Paid?
-            </Text>
-            <View style={tailwind`bg-white rounded-2xl px-4 py-3 mb-4 shadow`}>
-              <TextInput
-                placeholder="e.g. Saurabh"
-                placeholderTextColor="#94A3B8"
-                style={{ fontSize: 18 }}
-                value={paidby}
-                onChangeText={setPaidby}
-              />
+            <View>
+              <Text style={[tailwind`text-xs font-black tracking-widest mb-3 ml-1`, { color: theme.subText }]}>WHO PAID?</Text>
+              <View style={[tailwind`flex-row items-center rounded-2xl px-4 border shadow-sm`, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
+                <UserIcon size={20} color={theme.placeholder} />
+                <TextInput
+                  value={paidby}
+                  onChangeText={setPaidby}
+                  placeholder="e.g. Saurabh, Priya, Amit"
+                  placeholderTextColor={theme.placeholder}
+                  style={[tailwind`flex-1 px-3 py-4 text-base font-black`, { color: theme.text }]}
+                />
+              </View>
             </View>
 
-            
-            <Text style={tailwind`text-slate-600 font-semibold mb-2`}>
-              Category
-            </Text>
-            <View style={tailwind`flex-row flex-wrap`}>
-              {categories.map(cat => {
-                const selected = cat.value === category;
-                return (
+            <View>
+              <Text style={[tailwind`text-xs font-black tracking-widest mb-4 ml-1`, { color: theme.subText }]}>CATEGORY</Text>
+              <View style={tailwind`flex-row flex-wrap gap-3`}>
+                {categories.map(cat => (
                   <TouchableOpacity
                     key={cat.value}
                     onPress={() => setCategory(cat.value)}
-                    style={{
-                      paddingHorizontal: 14,
-                      paddingVertical: 10,
-                      borderRadius: 20,
-                      marginRight: 10,
-                      marginBottom: 10,
-                      backgroundColor: selected ? colors.button : '#ffffff',
-                      borderWidth: 1,
-                      borderColor: selected ? colors.button : '#E2E8F0',
-                    }}
+                    activeOpacity={0.8}
+                    style={[
+                      tailwind`px-5 py-3 rounded-2xl border-2 flex-row items-center`,
+                      {
+                        backgroundColor: category === cat.value ? (isDark ? '#1E293B' : '#E8F5E9') : theme.card,
+                        borderColor: category === cat.value ? theme.button : theme.cardBorder
+                      }
+                    ]}
                   >
-                    <Text
-                      style={{
-                        color: selected ? '#fff' : '#334155',
-                        fontWeight: '600',
-                      }}
-                    >
+                    <View style={[tailwind`w-2.5 h-2.5 rounded-full mr-2.5`, { backgroundColor: catBG[cat.value] }]} />
+                    <Text style={[
+                      tailwind`font-black text-sm`,
+                      { color: category === cat.value ? theme.text : theme.placeholder }
+                    ]}>
                       {cat.title}
                     </Text>
+                    {category === cat.value && (
+                      <CheckCircleIcon size={16} color={theme.button} style={tailwind`ml-2`} />
+                    )}
                   </TouchableOpacity>
-                );
-              })}
+                ))}
+              </View>
             </View>
           </View>
 
-          
-          <View style={tailwind`px-5 mt-6`}>
+          {/* Action Button */}
+          <View style={tailwind`mt-10 mb-6`}>
             {loading ? (
               <Loading />
             ) : (
               <TouchableOpacity
+                activeOpacity={0.85}
                 onPress={handleAddExpense}
-                style={{
-                  backgroundColor: colors.button,
-                  paddingVertical: 18,
-                  borderRadius: 20,
-                  alignItems: 'center',
-                  elevation: 6,
-                }}
+                style={[
+                  tailwind`py-5 rounded-[24px] items-center justify-center shadow-xl w-full`,
+                  {
+                    backgroundColor: theme.button,
+                    shadowColor: theme.button,
+                    shadowOpacity: 0.3,
+                    shadowRadius: 15,
+                    shadowOffset: { width: 0, height: 8 },
+                    elevation: 10
+                  }
+                ]}
               >
-                <Text
-                  style={{ color: 'white', fontSize: 17, fontWeight: 'bold' }}
-                >
-                  Save Expense
+                <Text style={[tailwind`text-xl font-black`, { color: theme.buttonText }]}>
+                  Add
                 </Text>
               </TouchableOpacity>
             )}
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

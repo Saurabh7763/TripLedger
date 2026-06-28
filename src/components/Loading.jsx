@@ -1,14 +1,15 @@
-import { View, Text, ActivityIndicator } from 'react-native'
-import React from 'react'
-import { colors } from '../theme'
-import tailwind from 'twrnc'
+import { View, ActivityIndicator } from 'react-native';
+import React from 'react';
+import tailwind from 'twrnc';
+import { useTheme } from '../context/ThemeContext';
 
 const Loading = () => {
-  return (
-    <View style={tailwind`flex-row justify-center my-5`}>
-      <ActivityIndicator size={'large'} color={colors.button}/>
-    </View>
-  )
-}
+    const { theme } = useTheme();
+    return (
+        <View style={tailwind`flex-row justify-center py-8`}>
+            <ActivityIndicator size="large" color={theme.button} />
+        </View>
+    );
+};
 
-export default Loading
+export default Loading;
